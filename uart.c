@@ -35,13 +35,6 @@ char UART1_ReadChar(void) {
     return U1RXREG;
 }
 
-// Funzione di echo (reinvia il carattere ricevuto)
-void UART1_Echo(void) {
-    char receivedChar = UART1_ReadChar(); // Legge un carattere
-    //updateWindow(receivedChar); // Aggiorna la finestra di rilevamento comandi
-    UART1_WriteChar(receivedChar); // Reinvia il carattere ricevuto
-}
-
 //circular buffer
 
 void cb_init(CircularBuffer *cb) {

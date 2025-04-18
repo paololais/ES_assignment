@@ -42,14 +42,8 @@ void UART1_Init();
 // Scrive un carattere sulla UART1
 void UART1_WriteChar(char c);
 
-// scrivi stringa
-void UART1_WriteString(const char *str);
-
 // Legge un carattere dalla UART1
 char UART1_ReadChar(void);
-
-// Funzione di echo (reinvia il carattere ricevuto)
-void UART1_Echo(void);
 
 //buffer
 typedef struct {
