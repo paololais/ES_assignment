@@ -94,11 +94,6 @@ void spi_write_2_reg(unsigned int read_addr, unsigned int* value1, unsigned int*
         SPI1STATbits.SPIROV = 0;
     }
 }
-/*Nel main:
- * unsigned char v1, v2;
-spi_read_double(0x42, &v1, &v2);
-// Ora v1 e v2 contengono i due byte letti
- */
 
 void mag_enable(){
     unsigned int addr;
@@ -117,7 +112,7 @@ void mag_enable(){
     trash = SPI1BUF;
     MAG_CS = 1;
     
-    tmr_wait_ms(1, 4); //tmr_wait_ms(1, 4); // wait 4ms for the magnetometer to switch to sleep mode 
+    tmr_wait_ms(TIMER3, 4); // wait 4ms for the magnetometer to switch to sleep mode 
     
     // active mode
     MAG_CS = 0;
@@ -127,7 +122,7 @@ void mag_enable(){
     while (SPI1STATbits.SPIRBF == 0);
     trash = SPI1BUF;
     while (SPI1STATbits.SPITBF == 1);
-    SPI1BUF = 0x00;
+    SPI1BUF = 0b00110000; //25hz
     while (SPI1STATbits.SPIRBF == 0);
     trash = SPI1BUF;
     MAG_CS = 1;

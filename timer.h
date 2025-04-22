@@ -36,6 +36,7 @@
 // TODO Insert appropriate #include <>
 #define TIMER1 1
 #define TIMER2 2
+#define TIMER3 3
 
 void tmr_setup_period(int timer, int ms);
 //void tmr_wait_period(int timer); //assignment 1-2

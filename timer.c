@@ -146,6 +146,16 @@ void tmr_wait_ms(int timer, int ms){
         IFS0bits.T2IF = 0;
         T2CONbits.TON = 1; // starts the timer!
     }
+    else if(timer == 3){
+        if(ms > 200) T2CONbits.T32 = 1;
+        PR2 = (int) ((Fcy / 256) * (ms / 1000.0));
+
+        T3CONbits.TCS = 0;
+        TMR3 = 0; // reset timer counter
+        T3CONbits.TCKPS = 3; // prescaler 1:256
+        IFS0bits.T3IF = 0;
+        T3CONbits.TON = 1; // starts the timer!
+    }
     //tmr_wait_period(timer); assignment 2
     
     if(timer == 1){
@@ -157,5 +167,10 @@ void tmr_wait_ms(int timer, int ms){
         while (IFS0bits.T2IF == 0);
 
         IFS0bits.T2IF = 0;      
+    }
+    else if(timer == 3){
+        while (IFS0bits.T3IF == 0);
+
+        IFS0bits.T3IF = 0;      
     }
 }

@@ -15,7 +15,6 @@
 
 // Finite State Machine (FSM) states for UART communication
 typedef enum {IDLE, S_dollar, S_R, S_A, S_T, S_E, S_comma, S_asterisk} UART_State;
-int messageOk = 0; // flag to check if $RATE,xx* is correct
 char receivedXX[2]; // store values for $RATE,xx*
 int success = 0; // flag to check if the value is valid
 UART_State uartState = IDLE; // Initialize the UART state to IDLE
@@ -29,6 +28,13 @@ CircularBuffer cb_tx;
 CircularBuffer cb_rx;
 
 char buffer[32];
+unsigned int read_addr = 0x42;
+unsigned int lsb;
+unsigned int msb;
+unsigned int raw;
+int signed_value;
+
+int mag_frequency = 5;
 
 // Interrupt UART RX
 void __attribute__((__interrupt__, __auto_psv__)) _U1RXInterrupt() {
@@ -98,40 +104,20 @@ void processReceivedData() {
 void handle_UART_FSM(char receivedChar) {
     switch (uartState) {
         case IDLE:
-            if (receivedChar == '$') uartState = S_dollar;
-            sprintf(buffer, "Idle*");
-            for (int i = 0; i < strlen(buffer); i++){
-                UART1_WriteChar(buffer[i]);
-            }
-            memset(buffer, 0, sizeof(buffer));
+            if (receivedChar == '$') uartState = S_dollar;            
             break;
         case S_dollar:
             if (receivedChar == 'R') uartState = S_R;
-            else uartState = IDLE;
-            sprintf(buffer, "Dollar*");
-            for (int i = 0; i < strlen(buffer); i++){
-                UART1_WriteChar(buffer[i]);
-            }
-            memset(buffer, 0, sizeof(buffer));
+            else uartState = IDLE;           
             break;
         case S_R:
             if (receivedChar == 'A') uartState = S_A;
-            else uartState = IDLE;
-            sprintf(buffer, "R*");
-            for (int i = 0; i < strlen(buffer); i++){
-                UART1_WriteChar(buffer[i]);
-            }
-            memset(buffer, 0, sizeof(buffer));
+            else uartState = IDLE;           
             break;
             
         case S_A:
             if (receivedChar == 'T') uartState = S_T;
-            else uartState = IDLE;
-            sprintf(buffer, "A*");
-            for (int i = 0; i < strlen(buffer); i++){
-                UART1_WriteChar(buffer[i]);
-            }
-            memset(buffer, 0, sizeof(buffer));
+            else uartState = IDLE;            
             break;
         
         case S_T:
@@ -146,50 +132,51 @@ void handle_UART_FSM(char receivedChar) {
         case S_E:
             if (receivedChar == ',') uartState = S_comma;
             else uartState = IDLE;
-            sprintf(buffer, "E*");
-            for (int i = 0; i < strlen(buffer); i++){
-                UART1_WriteChar(buffer[i]);
-            }
-            memset(buffer, 0, sizeof(buffer));
             break;
         case S_comma:
             receivedXX[0] = receivedChar;
             success = readFrequency();
-            if(success){
+            
+            if(success) uartState = S_asterisk;
+            else uartState = IDLE;
+            
+            break;
+        case S_asterisk:
+            if (receivedChar == '*'){
                 sprintf(buffer, "$OK*");
                 for (int i = 0; i < strlen(buffer); i++){
                     UART1_WriteChar(buffer[i]);
                 }
-                uartState = S_asterisk;
+                memset(buffer, 0, sizeof(buffer));
             }
             else{
                 sprintf(buffer, "$ERR,1*");
                 for (int i = 0; i < strlen(buffer); i++){
                     UART1_WriteChar(buffer[i]);
                 }
-                uartState = IDLE;
-            }
-            memset(buffer, 0, sizeof(buffer));
-            break;
-        case S_asterisk:
-            if (receivedChar == '*') messageOk = 1;
-            else messageOk = 0;
-            sprintf(buffer, "Asterisk*");
-            for (int i = 0; i < strlen(buffer); i++){
-                UART1_WriteChar(buffer[i]);
-            }
-            memset(buffer, 0, sizeof(buffer));
-            
+                memset(buffer, 0, sizeof(buffer));
+            }          
             uartState = IDLE;
             break;  
         default:
-            uartState = IDLE;
-            sprintf(buffer, "Idle*");
-            for (int i = 0; i < strlen(buffer); i++){
-                UART1_WriteChar(buffer[i]);
-            }
-            memset(buffer, 0, sizeof(buffer));
+            uartState = IDLE;           
             break;  
+    }
+}
+
+void printMagData(){
+    spi_write_2_reg(read_addr, &lsb, &msb);
+    lsb = lsb & 0x00F8;
+    msb = msb << 8; //left shift by 8
+    raw = msb | lsb; //put together the two bytes
+    //raw = raw >> 3; //right shift by 3
+    signed_value = (int) raw / 8; // alternativa più robusta
+
+    sprintf(buffer, "$MAGX=%d*", signed_value);
+
+    int l = strlen(buffer);
+    for (int i = 0; i < l; i++) {
+        UART1_WriteChar(buffer[i]);
     }
 }
 
@@ -205,10 +192,17 @@ int main(void) {
     int ret;    // variable to check if the algorithm has missed a deadline
     int i = 0; // variable to count 50 ticks (500ms)
     int missed_deadlines = 0; // variable to count missed deadlines of algorithm
+    int mag_out = 0; // feedback magnetometer data
     
     // led2
     TRISGbits.TRISG9 = 0; // LED2 output
     LATGbits.LATG9 = 0; // switch off LED2
+    
+    spi_init();
+    
+    // Make the magnetometer switch to Sleep mode; then make it go to active mode; 
+    // data rate = 25Hz
+    mag_enable();
     
     UART1_Init(); // initialize UART1
     
@@ -225,9 +219,15 @@ int main(void) {
             i = 0;
             LATGbits.LATG9 = !LATGbits.LATG9; // blink LED2
         }
-        
+                
         processReceivedData();
-         
+        
+        mag_out++;
+        if(mag_out == 20){
+            mag_out = 0;
+            printMagData();        
+        }
+
         ret = tmr_wait_period(TIMER1);
         
         if(ret) missed_deadlines++;
