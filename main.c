@@ -122,12 +122,7 @@ void handle_UART_FSM(char receivedChar) {
         
         case S_T:
             if (receivedChar == 'E') uartState = S_E;
-            else uartState = IDLE;
-            sprintf(buffer, "T*");
-            for (int i = 0; i < strlen(buffer); i++){
-                UART1_WriteChar(buffer[i]);
-            }
-            memset(buffer, 0, sizeof(buffer));
+            else uartState = IDLE;           
             break; 
         case S_E:
             if (receivedChar == ',') uartState = S_comma;
