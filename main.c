@@ -182,6 +182,8 @@ int main(void) {
             LATGbits.LATG9 = !LATGbits.LATG9; // blink LED2
         }
         
+        processReceivedData();
+         
         ret = tmr_wait_period(TIMER1);
         
         if(ret) missed_deadlines++;
