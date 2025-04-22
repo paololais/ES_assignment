@@ -30,8 +30,12 @@ CircularBuffer cb_rx;
 
 char buffer[32];
 
-
-
+// Interrupt UART RX
+void __attribute__((__interrupt__, __auto_psv__)) _U1RXInterrupt() {
+    char receivedChar = U1RXREG; // Legge carattere ricevuto
+    cb_push(&cb_rx, receivedChar);
+    IFS0bits.U1RXIF = 0; // Reset flag interrupt
+}
 
 // Reads the frequency value specified by the user.
 // performs a check to see if the value is valid.
