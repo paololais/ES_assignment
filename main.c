@@ -10,6 +10,7 @@
 #include "timer.h"
 #include "uart.h"
 #include <string.h>
+#include "stdio.h"
 //#include <stdlib.h> // For atoi
 
 // Finite State Machine (FSM) states for UART communication
@@ -27,7 +28,7 @@ CircularBuffer cb_tx;
 // used to receive rate by user
 CircularBuffer cb_rx;
 
-
+char buffer[32];
 
 
 
@@ -121,8 +122,20 @@ void handle_UART_FSM(char receivedChar) {
             break;
         case S_comma:
             success = readFrequency();
-            if(success) uartState = S_asterisk;
-            else uartState = IDLE;
+            if(success){
+                sprintf(buffer, "$OK*");
+                for (int i = 0; i < strlen(buffer); i++){
+                    UART1_WriteChar(buffer[i]);
+                }
+                uartState = S_asterisk;
+            }
+            else{
+                sprintf(buffer, "$ERR,1*");
+                for (int i = 0; i < strlen(buffer); i++){
+                    UART1_WriteChar(buffer[i]);
+                }
+                uartState = IDLE;
+            }
             break;
         case S_asterisk:
             if (receivedChar == '*') messageOk = 1;
