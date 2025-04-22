@@ -95,28 +95,58 @@ void handle_UART_FSM(char receivedChar) {
     switch (uartState) {
         case IDLE:
             if (receivedChar == '$') uartState = S_dollar;
+            sprintf(buffer, "Idle*");
+            for (int i = 0; i < strlen(buffer); i++){
+                UART1_WriteChar(buffer[i]);
+            }
+            memset(buffer, 0, sizeof(buffer));
             break;
         case S_dollar:
             if (receivedChar == 'R') uartState = S_R;
             else uartState = IDLE;
+            sprintf(buffer, "Dollar*");
+            for (int i = 0; i < strlen(buffer); i++){
+                UART1_WriteChar(buffer[i]);
+            }
+            memset(buffer, 0, sizeof(buffer));
             break;
         case S_R:
             if (receivedChar == 'A') uartState = S_A;
             else uartState = IDLE;
+            sprintf(buffer, "R*");
+            for (int i = 0; i < strlen(buffer); i++){
+                UART1_WriteChar(buffer[i]);
+            }
+            memset(buffer, 0, sizeof(buffer));
             break;
             
         case S_A:
             if (receivedChar == 'T') uartState = S_T;
             else uartState = IDLE;
+            sprintf(buffer, "A*");
+            for (int i = 0; i < strlen(buffer); i++){
+                UART1_WriteChar(buffer[i]);
+            }
+            memset(buffer, 0, sizeof(buffer));
             break;
         
         case S_T:
             if (receivedChar == 'E') uartState = S_E;
             else uartState = IDLE;
+            sprintf(buffer, "T*");
+            for (int i = 0; i < strlen(buffer); i++){
+                UART1_WriteChar(buffer[i]);
+            }
+            memset(buffer, 0, sizeof(buffer));
             break; 
         case S_E:
             if (receivedChar == ',') uartState = S_comma;
             else uartState = IDLE;
+            sprintf(buffer, "E*");
+            for (int i = 0; i < strlen(buffer); i++){
+                UART1_WriteChar(buffer[i]);
+            }
+            memset(buffer, 0, sizeof(buffer));
             break;
         case S_comma:
             receivedXX[0] = receivedChar;
@@ -135,15 +165,26 @@ void handle_UART_FSM(char receivedChar) {
                 }
                 uartState = IDLE;
             }
+            memset(buffer, 0, sizeof(buffer));
             break;
         case S_asterisk:
             if (receivedChar == '*') messageOk = 1;
             else messageOk = 0;
+            sprintf(buffer, "Asterisk*");
+            for (int i = 0; i < strlen(buffer); i++){
+                UART1_WriteChar(buffer[i]);
+            }
+            memset(buffer, 0, sizeof(buffer));
             
             uartState = IDLE;
             break;  
         default:
             uartState = IDLE;
+            sprintf(buffer, "Idle*");
+            for (int i = 0; i < strlen(buffer); i++){
+                UART1_WriteChar(buffer[i]);
+            }
+            memset(buffer, 0, sizeof(buffer));
             break;  
     }
 }
