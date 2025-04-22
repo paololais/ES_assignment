@@ -40,11 +40,9 @@ char buffer[32];
 int readFrequency(){
     if(cb_is_empty(&cb_rx)) return 0;
     
-    for (int i = 0; i<2; i++){
-        IEC0bits.U1RXIE = 0;   // disable interrupt RX
-        cb_pop(&cb_rx, &receivedXX[i]);
-        IEC0bits.U1RXIE = 1;   // enable interrupt RX
-    }
+    IEC0bits.U1RXIE = 0;   // disable interrupt RX
+    cb_pop(&cb_rx, &receivedXX[1]);
+    IEC0bits.U1RXIE = 1;   // enable interrupt RX
     
     if(strcmp(receivedXX, "00") == 0 || strcmp(receivedXX, "01") == 0 || strcmp(receivedXX, "02") == 0 || 
             strcmp(receivedXX, "04") == 0 || strcmp(receivedXX, "05") == 0 || strcmp(receivedXX, "10") == 0){
@@ -121,6 +119,7 @@ void handle_UART_FSM(char receivedChar) {
             else uartState = IDLE;
             break;
         case S_comma:
+            receivedXX[0] = receivedChar;
             success = readFrequency();
             if(success){
                 sprintf(buffer, "$OK*");
