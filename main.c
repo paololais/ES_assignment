@@ -133,7 +133,15 @@ void handle_UART_FSM(char receivedChar) {
             success = readFrequency();
             
             if(success) uartState = S_asterisk;
-            else uartState = IDLE;
+            else {
+                sprintf(buffer, "$ERR,1*");
+                for (int i = 0; i < strlen(buffer); i++){
+                    UART1_WriteChar(buffer[i]);
+                }
+                memset(buffer, 0, sizeof(buffer));
+            
+                uartState = IDLE;
+            }
             
             break;
         case S_asterisk:
@@ -144,13 +152,7 @@ void handle_UART_FSM(char receivedChar) {
                 }
                 memset(buffer, 0, sizeof(buffer));
             }
-            else{
-                sprintf(buffer, "$ERR,1*");
-                for (int i = 0; i < strlen(buffer); i++){
-                    UART1_WriteChar(buffer[i]);
-                }
-                memset(buffer, 0, sizeof(buffer));
-            }          
+            
             uartState = IDLE;
             break;  
         default:
