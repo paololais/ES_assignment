@@ -11,7 +11,7 @@
 #include "uart.h"
 #include <string.h>
 #include "stdio.h"
-//#include <stdlib.h> // For atoi
+#include <stdlib.h>
 
 // Finite State Machine (FSM) states for UART communication
 typedef enum {IDLE, S_dollar, S_R, S_A, S_T, S_E, S_comma, S_asterisk} UART_State;
@@ -57,6 +57,7 @@ int readFrequency(){
     if(strcmp(receivedXX, "00") == 0 || strcmp(receivedXX, "01") == 0 || strcmp(receivedXX, "02") == 0 || 
             strcmp(receivedXX, "04") == 0 || strcmp(receivedXX, "05") == 0 || strcmp(receivedXX, "10") == 0){
         
+        mag_frequency = atoi(receivedXX);
         return 1;
     }
     
@@ -146,11 +147,11 @@ void handle_UART_FSM(char receivedChar) {
             break;
         case S_asterisk:
             if (receivedChar == '*'){
-                sprintf(buffer, "$OK*");
+                sprintf(buffer, "$OK - %d*", mag_frequency);
                 for (int i = 0; i < strlen(buffer); i++){
                     UART1_WriteChar(buffer[i]);
                 }
-                memset(buffer, 0, sizeof(buffer));
+                memset(buffer, 0, sizeof(buffer));                
             }
             
             uartState = IDLE;
@@ -167,7 +168,7 @@ void printMagData(){
     msb = msb << 8; //left shift by 8
     raw = msb | lsb; //put together the two bytes
     //raw = raw >> 3; //right shift by 3
-    signed_value = (int) raw / 8; // alternativa piÃ¹ robusta
+    signed_value = (int) raw / 8; // alternativa più robusta
 
     sprintf(buffer, "$MAGX=%d*", signed_value);
 
@@ -220,7 +221,7 @@ int main(void) {
         processReceivedData();
         
         mag_out++;
-        if(mag_out == 20){
+        if(mag_out >= (100/mag_frequency) && mag_frequency!=0){
             mag_out = 0;
             printMagData();        
         }
