@@ -123,6 +123,7 @@ void mag_enable(){
     trash = SPI1BUF;
     while (SPI1STATbits.SPITBF == 1);
     SPI1BUF = 0b00110000; //25hz
+    //SPI1BUF = 0x00;
     while (SPI1STATbits.SPIRBF == 0);
     trash = SPI1BUF;
     MAG_CS = 1;
