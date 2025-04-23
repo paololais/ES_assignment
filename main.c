@@ -13,6 +13,8 @@
 #include "stdio.h"
 #include <stdlib.h>
 
+#define NUM_SAMPLES 5
+
 // Finite State Machine (FSM) states for UART communication
 typedef enum {IDLE, S_dollar, S_R, S_A, S_T, S_E, S_comma, S_asterisk} UART_State;
 char receivedXX[2]; // store values for $RATE,xx*
@@ -35,6 +37,9 @@ unsigned int raw;
 int signed_value;
 
 int mag_frequency = 5;
+int x_axis_values[NUM_SAMPLES] = {0}; // Array to store last 5 measurement
+int current_index_x = 0;                  // Index to track the oldest measurement
+int samples_collected_x = 0;              // Counter for total samples collected
 
 // Interrupt UART RX
 void __attribute__((__interrupt__, __auto_psv__)) _U1RXInterrupt() {
@@ -82,21 +87,6 @@ int readFrequency(){
             return 0; // Invalid, flag error
     }
     */
-}
-
-// Function that processes characters from the circular buffer
-void processReceivedData() {
-    char receivedChar;
-    
-    // If there are characters in the buffer
-    while (!cb_is_empty(&cb_rx)) {
-        IEC0bits.U1RXIE = 0;   // Disable RX interrupt
-        // Pop the character from the buffer
-        cb_pop(&cb_rx, &receivedChar);
-        IEC0bits.U1RXIE = 1;   // Enable RX interrupt
-        
-        handle_UART_FSM(receivedChar); // Handle the character based on the FSM
-    }
 }
 
 // Handles the UART Finite State Machine (FSM) based on the received character.
@@ -162,15 +152,65 @@ void handle_UART_FSM(char receivedChar) {
     }
 }
 
-void printMagData(){
+// Function that processes characters from the circular buffer
+void processReceivedData() {
+    char receivedChar;
+    
+    // If there are characters in the buffer
+    while (!cb_is_empty(&cb_rx)) {
+        IEC0bits.U1RXIE = 0;   // Disable RX interrupt
+        // Pop the character from the buffer
+        cb_pop(&cb_rx, &receivedChar);
+        IEC0bits.U1RXIE = 1;   // Enable RX interrupt
+        
+        handle_UART_FSM(receivedChar); // Handle the character based on the FSM
+    }
+}
+
+void addXAxisMeasurement(int new_value) {
+    // Store the new value, replacing the oldest one
+    x_axis_values[current_index_x] = new_value;
+    
+    // Update index to point to the next position (which will be the oldest value)
+    current_index_x = (current_index_x + 1) % NUM_SAMPLES;
+    
+    // Keep track of how many samples we've collected
+    if (samples_collected_x < NUM_SAMPLES) {
+        samples_collected_x++;
+    }
+}
+
+void getMagData(){
+    // X axis
     spi_write_2_reg(read_addr, &lsb, &msb);
     lsb = lsb & 0x00F8;
     msb = msb << 8; //left shift by 8
     raw = msb | lsb; //put together the two bytes
     //raw = raw >> 3; //right shift by 3
     signed_value = (int) raw / 8; // alternativa più robusta
+    
+    addXAxisMeasurement(signed_value);     
+}
 
-    sprintf(buffer, "$MAGX=%d*", signed_value);
+// Calculate the average of stored measurements
+float averageXMeasurements() {
+    if (samples_collected_x == 0) return 0;
+    
+    float sum = 0;
+    
+    // Sum all the valid values
+    for (int i = 0; i < samples_collected_x; i++) {
+        sum += x_axis_values[i];
+    }
+    
+    // Return the average
+    return sum / samples_collected_x;
+}
+
+void printMagData(){    
+    float Xaverage = averageXMeasurements();
+    
+    sprintf(buffer, "$MAGX=%f*", Xaverage);
 
     int l = strlen(buffer);
     for (int i = 0; i < l; i++) {
@@ -191,6 +231,7 @@ int main(void) {
     int i = 0; // variable to count 50 ticks (500ms)
     int missed_deadlines = 0; // variable to count missed deadlines of algorithm
     int mag_out = 0; // feedback magnetometer data
+    int count_getMagData = 0; // counter to sincronize getMagData at 25Hz
     
     // led2
     TRISGbits.TRISG9 = 0; // LED2 output
@@ -219,6 +260,12 @@ int main(void) {
         }
                 
         processReceivedData();
+        
+        count_getMagData++;
+        if(count_getMagData == 4){
+            count_getMagData = 0;
+            getMagData();
+        }
         
         mag_out++;
         if(mag_out >= (100/mag_frequency) && mag_frequency!=0){
