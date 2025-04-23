@@ -210,7 +210,7 @@ float averageXMeasurements() {
 void printMagData(){    
     float Xaverage = averageXMeasurements();
     
-    sprintf(buffer, "$MAGX=%f*", Xaverage);
+    sprintf(buffer, "$MAGX=%.2f*", Xaverage);
 
     int l = strlen(buffer);
     for (int i = 0; i < l; i++) {
@@ -268,7 +268,7 @@ int main(void) {
         }
         
         mag_out++;
-        if(mag_out >= (100/mag_frequency) && mag_frequency!=0){
+        if(mag_frequency!=0 && mag_out >= (100/mag_frequency)){
             mag_out = 0;
             printMagData();        
         }
