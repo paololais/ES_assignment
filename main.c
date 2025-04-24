@@ -216,7 +216,7 @@ void getMagData(){
     msb = msb << 8; //left shift by 8
     raw = msb | lsb; //put together the two bytes
     //raw = raw >> 3; //right shift by 3
-    signed_value = (int) raw / 8; // alternativa più robusta
+    signed_value = (int) raw / 8;
     
     addMeasurement(AXIS_X, signed_value); 
 
@@ -225,7 +225,7 @@ void getMagData(){
     lsb = lsb & 0x00F8;
     msb = msb << 8; //left shift by 8
     raw = msb | lsb; //put together the two bytes
-    signed_value = (int) raw / 8; // alternativa più robusta
+    signed_value = (int) raw / 8;
     
     addMeasurement(AXIS_Y, signed_value);
     
@@ -330,7 +330,7 @@ int main(void) {
             i = 0;
             LATGbits.LATG9 = !LATGbits.LATG9; // blink LED2
         }
-                
+               
         processReceivedData();
         
         count_getMagData++;

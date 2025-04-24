@@ -83,6 +83,7 @@ int tmr_wait_period(int timer){
     if (timer == 1){
         if(IFS0bits.T1IF == 0){
             while (IFS0bits.T1IF == 0);
+            IFS0bits.T1IF = 0;
             return 0; 
         }
         else if(IFS0bits.T1IF == 1){
@@ -93,6 +94,7 @@ int tmr_wait_period(int timer){
     else if(timer == 2){
         if(IFS0bits.T2IF == 0){
             while (IFS0bits.T2IF == 0);
+            IFS0bits.T2IF = 0;
             return 0;
         }
         else if(IFS0bits.T2IF == 1){
@@ -103,6 +105,7 @@ int tmr_wait_period(int timer){
     else if(timer == 3){
         if(IFS0bits.T3IF == 0){
             while (IFS0bits.T3IF == 0);
+            IFS0bits.T2IF = 0;
             return 0;
         }
         else if(IFS0bits.T3IF == 1){
@@ -113,6 +116,7 @@ int tmr_wait_period(int timer){
     else if(timer == 4){
         if(IFS1bits.T4IF == 0){
             while (IFS1bits.T4IF == 0);
+            IFS1bits.T4IF = 0;
             return 0;
         }
         else if(IFS1bits.T4IF == 1){
@@ -148,7 +152,7 @@ void tmr_wait_ms(int timer, int ms){
     }
     else if(timer == 3){
         if(ms > 200) T2CONbits.T32 = 1;
-        PR2 = (int) ((Fcy / 256) * (ms / 1000.0));
+        PR3 = (int) ((Fcy / 256) * (ms / 1000.0));
 
         T3CONbits.TCS = 0;
         TMR3 = 0; // reset timer counter
