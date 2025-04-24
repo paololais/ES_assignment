@@ -14,6 +14,9 @@
 #include <stdlib.h>
 
 #define NUM_SAMPLES 5
+#define AXIS_X 0
+#define AXIS_Y 1
+#define AXIS_Z 2
 
 // Finite State Machine (FSM) states for UART communication
 typedef enum {IDLE, S_dollar, S_R, S_A, S_T, S_E, S_comma, S_asterisk} UART_State;
@@ -30,7 +33,9 @@ CircularBuffer cb_tx;
 CircularBuffer cb_rx;
 
 char buffer[32];
-unsigned int read_addr = 0x42;
+unsigned int read_addr_x = 0x42;
+unsigned int read_addr_y = 0x44;
+unsigned int read_addr_z = 0x46;
 unsigned int lsb;
 unsigned int msb;
 unsigned int raw;
@@ -40,6 +45,12 @@ int mag_frequency = 5;
 int x_axis_values[NUM_SAMPLES] = {0}; // Array to store last 5 measurement
 int current_index_x = 0;                  // Index to track the oldest measurement
 int samples_collected_x = 0;              // Counter for total samples collected
+int y_axis_values[NUM_SAMPLES] = {0}; // Array to store last 5 measurement
+int current_index_y = 0;                  // Index to track the oldest measurement
+int samples_collected_y = 0;              // Counter for total samples collected
+int z_axis_values[NUM_SAMPLES] = {0}; // Array to store last 5 measurement
+int current_index_z = 0;                  // Index to track the oldest measurement
+int samples_collected_z = 0;              // Counter for total samples collected
 
 // Interrupt UART RX
 void __attribute__((__interrupt__, __auto_psv__)) _U1RXInterrupt() {
@@ -167,50 +178,92 @@ void processReceivedData() {
     }
 }
 
-void addXAxisMeasurement(int new_value) {
-    // Store the new value, replacing the oldest one
-    x_axis_values[current_index_x] = new_value;
-    
-    // Update index to point to the next position (which will be the oldest value)
-    current_index_x = (current_index_x + 1) % NUM_SAMPLES;
-    
-    // Keep track of how many samples we've collected
-    if (samples_collected_x < NUM_SAMPLES) {
-        samples_collected_x++;
+void addMeasurement(int axis, int new_value) {
+    switch(axis) {
+        case AXIS_X:
+            x_axis_values[current_index_x++] = new_value;
+             // Update index to point to the next position (which will be the oldest value)
+            current_index_x = (current_index_x + 1) % NUM_SAMPLES;
+            // Keep track of how many samples we've collected
+            if (samples_collected_x < NUM_SAMPLES) samples_collected_x++;
+            break;
+        case AXIS_Y:
+            y_axis_values[current_index_y++] = new_value;
+            // Update index to point to the next position (which will be the oldest value)
+            current_index_y = (current_index_y + 1) % NUM_SAMPLES;
+            // Keep track of how many samples we've collected
+            if (samples_collected_y < NUM_SAMPLES) samples_collected_y++;
+            break;
+        case AXIS_Z:
+            z_axis_values[current_index_z++] = new_value;
+            // Update index to point to the next position (which will be the oldest value)
+            current_index_z = (current_index_z + 1) % NUM_SAMPLES;
+            // Keep track of how many samples we've collected
+            if (samples_collected_z < NUM_SAMPLES) samples_collected_z++;
+            break;
     }
 }
 
 void getMagData(){
     // X axis
-    spi_write_2_reg(read_addr, &lsb, &msb);
+    spi_write_2_reg(read_addr_x, &lsb, &msb);
     lsb = lsb & 0x00F8;
     msb = msb << 8; //left shift by 8
     raw = msb | lsb; //put together the two bytes
     //raw = raw >> 3; //right shift by 3
     signed_value = (int) raw / 8; // alternativa più robusta
     
-    addXAxisMeasurement(signed_value);     
+    addMeasurement(AXIS_X, signed_value); 
+
+    // Y axis
+    spi_write_2_reg(read_addr_y, &lsb, &msb);
+    lsb = lsb & 0x00F8;
+    msb = msb << 8; //left shift by 8
+    raw = msb | lsb; //put together the two bytes
+    signed_value = (int) raw / 8; // alternativa più robusta
+    
+    addMeasurement(AXIS_Y, signed_value);
+    
+    // Z axis
+    spi_write_2_reg(read_addr_z, &lsb, &msb);
+    lsb = lsb & 0x00FE;
+    msb = msb << 8; //left shift by 8
+    raw = msb | lsb; //put together the two bytes
+    signed_value = (int) raw >> 1; // alternativa più robusta
+    
+    addMeasurement(AXIS_Z, signed_value);
 }
 
 // Calculate the average of stored measurements
-float averageXMeasurements() {
-    if (samples_collected_x == 0) return 0;
-    
+float averageMeasurements(int axis) {    
     float sum = 0;
+    int count = 0;
     
-    // Sum all the valid values
-    for (int i = 0; i < samples_collected_x; i++) {
-        sum += x_axis_values[i];
+     switch(axis) {
+        case AXIS_X:
+            count = samples_collected_x;
+            for (int i = 0; i < count; i++) sum += x_axis_values[i];
+            break;
+        case AXIS_Y:
+            count = samples_collected_y;
+            for (int i = 0; i < count; i++) sum += y_axis_values[i];
+            break;
+        case AXIS_Z:
+            count = samples_collected_z;
+            for (int i = 0; i < count; i++) sum += z_axis_values[i];
+            break;
     }
     
     // Return the average
-    return sum / samples_collected_x;
+    return (count == 0) ? 0 : sum / count;
 }
 
 void printMagData(){    
-    float Xaverage = averageXMeasurements();
+    float Xaverage = averageMeasurements(AXIS_X);
+    float Yaverage = averageMeasurements(AXIS_Y);
+    float Zaverage = averageMeasurements(AXIS_Z);
     
-    sprintf(buffer, "$MAGX=%.2f*", Xaverage);
+    sprintf(buffer, "$MAG,%.2f,%.2f,%.2f*", Xaverage,Yaverage,Zaverage);
 
     int l = strlen(buffer);
     for (int i = 0; i < l; i++) {
