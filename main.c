@@ -359,6 +359,7 @@ int main(void) {
         
         count_dead++;
         if(count_dead==500){
+            count_dead=0;
             sprintf(buffer, "$MissedDeadlines%d*", missed_deadlines);
 
             int l = strlen(buffer);
