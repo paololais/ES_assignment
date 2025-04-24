@@ -229,7 +229,8 @@ void getMagData(){
     lsb = lsb & 0x00FE;
     msb = msb << 8; //left shift by 8
     raw = msb | lsb; //put together the two bytes
-    signed_value = (int) raw >> 1; // alternativa più robusta
+    //signed_value = (int) raw >> 1;
+    signed_value = (int) raw / 2;
     
     addMeasurement(AXIS_Z, signed_value);
 }
@@ -259,11 +260,11 @@ float averageMeasurements(int axis) {
 }
 
 void printMagData(){    
-    float Xaverage = averageMeasurements(AXIS_X);
-    float Yaverage = averageMeasurements(AXIS_Y);
-    float Zaverage = averageMeasurements(AXIS_Z);
+    double Xaverage = averageMeasurements(AXIS_X);
+    double Yaverage = averageMeasurements(AXIS_Y);
+    double Zaverage = averageMeasurements(AXIS_Z);
     
-    sprintf(buffer, "$MAG,%.2f,%.2f,%.2f*", Xaverage,Yaverage,Zaverage);
+    sprintf(buffer, "$MAG,%.1f,%.1f,%.1f*", Xaverage,Yaverage,Zaverage);
 
     int l = strlen(buffer);
     for (int i = 0; i < l; i++) {
