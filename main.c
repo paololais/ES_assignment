@@ -265,10 +265,6 @@ float averageMeasurements(int axis) {
 }
 
 void printMagData(){    
-    x_avg = averageMeasurements(AXIS_X);
-    y_avg = averageMeasurements(AXIS_Y);
-    z_avg = averageMeasurements(AXIS_Z);
-    
     sprintf(buffer, "$MAG,%.1f,%.1f,%.1f*", x_avg,y_avg,z_avg);
 
     int l = strlen(buffer);
@@ -307,6 +303,7 @@ int main(void) {
     int mag_out = 0; // feedback magnetometer data
     int count_getMagData = 0; // counter to sincronize getMagData at 25Hz
     int count_yaw = 0; // counter to sincronize print yaw angle at 5Hz
+    int count_dead = 0;
     
     // led2
     TRISGbits.TRISG9 = 0; // LED2 output
@@ -340,6 +337,9 @@ int main(void) {
         if(count_getMagData == 4){
             count_getMagData = 0;
             getMagData();
+            x_avg = averageMeasurements(AXIS_X);
+            y_avg = averageMeasurements(AXIS_Y);
+            z_avg = averageMeasurements(AXIS_Z);
         }
         
         mag_out++;
@@ -355,8 +355,17 @@ int main(void) {
         }
 
         ret = tmr_wait_period(TIMER1);
-        
         if(ret) missed_deadlines++;
+        
+        count_dead++;
+        if(count_dead==500){
+            sprintf(buffer, "$MissedDeadlines%d*", missed_deadlines);
+
+            int l = strlen(buffer);
+            for (int i = 0; i < l; i++) {
+                UART1_WriteChar(buffer[i]);
+            }
+        }
     }
     return 0;
 }
