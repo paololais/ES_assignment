@@ -13,12 +13,6 @@ void tmr_setup_period(int timer, int ms){
     //It should start the timer
     if(ms > 200) return;
     
-    
-    // Fcy = Fosc / 2 = 8000000 / 2 = 4000000 (number of clocks in one second)
-    // in 0.1 second there would be 400000 clocks steps
-    // this is too high to be put in a 16 bit register (max 65535)
-    // If we set a prescaler of 1:8 we have 400000/8 = 50000 clock steps, OK!
-    
     long int Fcy = 72000000;
     // Formula: PRx = (Fcy / Prescaler) * (ms / 1000)
     //PR1 = 56250;
@@ -62,22 +56,6 @@ void tmr_setup_period(int timer, int ms){
     }
     
 }
-
-/*
-void tmr_wait_period(int timer){
-    if(timer == 1){
-        while (IFS0bits.T1IF == 0);
-
-        IFS0bits.T1IF = 0;      
-    }
-    else if(timer == 2){
-        while (IFS0bits.T2IF == 0);
-
-        IFS0bits.T2IF = 0;      
-    }
-    
-}
-*/
 
 int tmr_wait_period(int timer){
     if (timer == 1){
@@ -126,7 +104,6 @@ int tmr_wait_period(int timer){
     }
 }
 void tmr_wait_ms(int timer, int ms){
-    //tmr_setup_period(timer, ms); assignment 2
     long int Fcy = 72000000;
     // Formula: PRx = (Fcy / Prescaler) * (ms / 1000)
     //PR1 = 56250;
@@ -141,7 +118,9 @@ void tmr_wait_ms(int timer, int ms){
     }
     
     else if(timer == 2){
-        if(ms > 200) T2CONbits.T32 = 1;
+        //if(ms > 200) T2CONbits.T32 = 1;
+        if(ms > 200) return;
+
         PR2 = (int) ((Fcy / 256) * (ms / 1000.0));
 
         T2CONbits.TCS = 0;
@@ -151,7 +130,6 @@ void tmr_wait_ms(int timer, int ms){
         T2CONbits.TON = 1; // starts the timer!
     }
     else if(timer == 3){
-        if(ms > 200) T2CONbits.T32 = 1;
         PR3 = (int) ((Fcy / 256) * (ms / 1000.0));
 
         T3CONbits.TCS = 0;
@@ -160,7 +138,15 @@ void tmr_wait_ms(int timer, int ms){
         IFS0bits.T3IF = 0;
         T3CONbits.TON = 1; // starts the timer!
     }
-    //tmr_wait_period(timer); assignment 2
+    else if(timer == 4){
+        PR4 = (int) ((Fcy / 256) * (ms / 1000.0));
+
+        T4CONbits.TCS = 0;
+        TMR4 = 0; // reset timer counter
+        T4CONbits.TCKPS = 3; // prescaler 1:256
+        IFS1bits.T4IF = 0;
+        T4CONbits.TON = 1; // starts the timer!
+    }
     
     if(timer == 1){
         while (IFS0bits.T1IF == 0);
@@ -176,5 +162,10 @@ void tmr_wait_ms(int timer, int ms){
         while (IFS0bits.T3IF == 0);
 
         IFS0bits.T3IF = 0;      
+    }
+    else if(timer == 4){
+        while (IFS1bits.T4IF == 0);
+
+        IFS1bits.T4IF = 0;      
     }
 }

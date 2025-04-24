@@ -14,7 +14,8 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define NUM_SAMPLES 5
+#define NUM_SAMPLES 5 // Number of samples to average
+// macros for axes
 #define AXIS_X 0
 #define AXIS_Y 1
 #define AXIS_Z 2
@@ -33,16 +34,17 @@ CircularBuffer cb_tx;
 // used to receive rate by user
 CircularBuffer cb_rx;
 
-char buffer[32];
-unsigned int read_addr_x = 0x42;
-unsigned int read_addr_y = 0x44;
-unsigned int read_addr_z = 0x46;
+char buffer[32];    // buffer for UART messages
+unsigned int read_addr_x = 0x42; // address of X axis
+unsigned int read_addr_y = 0x44; // address of Y axis
+unsigned int read_addr_z = 0x46; // address of Z axis
 unsigned int lsb;
 unsigned int msb;
 unsigned int raw;
 int signed_value;
 
-int mag_frequency = 5;
+int mag_frequency = 5;                 // default frequency 5Hz
+// magnetometer data
 int x_axis_values[NUM_SAMPLES] = {0}; // Array to store last 5 measurement
 int current_index_x = 0;                  // Index to track the oldest measurement
 int samples_collected_x = 0;              // Counter for total samples collected
@@ -52,16 +54,30 @@ int samples_collected_y = 0;              // Counter for total samples collected
 int z_axis_values[NUM_SAMPLES] = {0}; // Array to store last 5 measurement
 int current_index_z = 0;                  // Index to track the oldest measurement
 int samples_collected_z = 0;              // Counter for total samples collected
-
+// magnetometer data average values
 double x_avg;
 double y_avg;
 double z_avg;
 
 // Interrupt UART RX
 void __attribute__((__interrupt__, __auto_psv__)) _U1RXInterrupt() {
-    char receivedChar = U1RXREG; // Legge carattere ricevuto
+    char receivedChar = U1RXREG; // reads the received character
     cb_push(&cb_rx, receivedChar);
     IFS0bits.U1RXIF = 0; // Reset flag interrupt
+}
+// Interrupt UART TX
+void __attribute__((__interrupt__, __auto_psv__)) _U1TXInterrupt() {
+    char c;
+
+    // If there are characters in the TX buffer, send them
+    if (!cb_is_empty(&cb_tx)) {
+        cb_pop(&cb_tx, &c); // Pop a character from the TX buffer
+        U1TXREG = c;        // Write the character to the UART TX register
+    } else {
+        IEC0bits.U1TXIE = 0; // Disable TX interrupt if the buffer is empty
+    }
+
+    IFS0bits.U1TXIF = 0; // Clear the TX interrupt flag
 }
 
 // Reads the frequency value specified by the user.
@@ -143,7 +159,7 @@ void handle_UART_FSM(char receivedChar) {
             else {
                 sprintf(buffer, "$ERR,1*");
                 for (int i = 0; i < strlen(buffer); i++){
-                    UART1_WriteChar(buffer[i]);
+                    UART1_WriteChar(buffer[i], &cb_tx);
                 }
                 memset(buffer, 0, sizeof(buffer));
             
@@ -155,7 +171,7 @@ void handle_UART_FSM(char receivedChar) {
             if (receivedChar == '*'){
                 sprintf(buffer, "$OK - %d*", mag_frequency);
                 for (int i = 0; i < strlen(buffer); i++){
-                    UART1_WriteChar(buffer[i]);
+                    UART1_WriteChar(buffer[i], &cb_tx);
                 }
                 memset(buffer, 0, sizeof(buffer));                
             }
@@ -183,6 +199,7 @@ void processReceivedData() {
     }
 }
 
+// Function to add a new measurement to the corresponding axis array
 void addMeasurement(int axis, int new_value) {
     switch(axis) {
         case AXIS_X:
@@ -209,6 +226,8 @@ void addMeasurement(int axis, int new_value) {
     }
 }
 
+// function to get magnetometer data of each axis
+// and store it in the corresponding array
 void getMagData(){
     // X axis
     spi_write_2_reg(read_addr_x, &lsb, &msb);
@@ -216,27 +235,24 @@ void getMagData(){
     msb = msb << 8; //left shift by 8
     raw = msb | lsb; //put together the two bytes
     //raw = raw >> 3; //right shift by 3
-    signed_value = (int) raw / 8;
-    
+    signed_value = (int) raw / 8; // right shift by 3 corresponds to dividing by 8
     addMeasurement(AXIS_X, signed_value); 
 
     // Y axis
     spi_write_2_reg(read_addr_y, &lsb, &msb);
     lsb = lsb & 0x00F8;
-    msb = msb << 8; //left shift by 8
-    raw = msb | lsb; //put together the two bytes
+    msb = msb << 8;
+    raw = msb | lsb;
     signed_value = (int) raw / 8;
-    
     addMeasurement(AXIS_Y, signed_value);
     
     // Z axis
     spi_write_2_reg(read_addr_z, &lsb, &msb);
-    lsb = lsb & 0x00FE;
-    msb = msb << 8; //left shift by 8
-    raw = msb | lsb; //put together the two bytes
+    lsb = lsb & 0x00FE; // for z axis LSB the register bits are different
+    msb = msb << 8;
+    raw = msb | lsb;
     //signed_value = (int) raw >> 1;
-    signed_value = (int) raw / 2;
-    
+    signed_value = (int) raw / 2; // right shift by 1 corresponds to dividing by 2
     addMeasurement(AXIS_Z, signed_value);
 }
 
@@ -264,31 +280,33 @@ float averageMeasurements(int axis) {
     return (count == 0) ? 0 : sum / count;
 }
 
+// Function to print magnetometer data using protocol $MAG,x,y,z*
 void printMagData(){    
     sprintf(buffer, "$MAG,%.1f,%.1f,%.1f*", x_avg,y_avg,z_avg);
 
     int l = strlen(buffer);
     for (int i = 0; i < l; i++) {
-        UART1_WriteChar(buffer[i]);
+        UART1_WriteChar(buffer[i], &cb_tx);
     }
 }
 
+// Function to print yaw angle using protocol $YAW,xx*
 void printYawAngle(){
     double heading_rad = atan2(y_avg, x_avg);
     double heading_deg = heading_rad * (180.0 / M_PI); // Convert to degrees
 
     if (heading_deg < 0)
-        heading_deg += 360.0; // Normalize to 0?360°
+        heading_deg += 360.0; // Normalize to 0-360
     
     sprintf(buffer, " $YAW,%.1f*", heading_deg);
 
     int l = strlen(buffer);
     for (int i = 0; i < l; i++) {
-        UART1_WriteChar(buffer[i]);
+        UART1_WriteChar(buffer[i], &cb_tx);
     }
 }
 
-// function that waits 7 ms
+// periodic function that runs for 7ms
 void algorithm() {
     tmr_wait_ms(TIMER2, 7);
 }
@@ -300,16 +318,15 @@ int main(void) {
     int ret;    // variable to check if the algorithm has missed a deadline
     int i = 0; // variable to count 50 ticks (500ms)
     int missed_deadlines = 0; // variable to count missed deadlines of algorithm
-    int mag_out = 0; // feedback magnetometer data
+    int count_magPrint = 0; // feedback magnetometer data
     int count_getMagData = 0; // counter to sincronize getMagData at 25Hz
     int count_yaw = 0; // counter to sincronize print yaw angle at 5Hz
-    int count_dead = 0;
+    int count_dead = 0; // counter to sincronize print missed deadlines
     
-    // led2
     TRISGbits.TRISG9 = 0; // LED2 output
-    LATGbits.LATG9 = 0; // switch off LED2
+    LATGbits.LATG9 = 0; // switch off LED2 at the beginning
     
-    spi_init();
+    spi_init(); // initialize SPI
     
     // Make the magnetometer switch to Sleep mode; then make it go to active mode; 
     // data rate = 25Hz
@@ -334,6 +351,8 @@ int main(void) {
         processReceivedData();
         
         count_getMagData++;
+        // get magnetometer data at 25Hz
+        // every 4 ticks of the algorithm (4*10ms = 40ms)
         if(count_getMagData == 4){
             count_getMagData = 0;
             getMagData();
@@ -342,13 +361,17 @@ int main(void) {
             z_avg = averageMeasurements(AXIS_Z);
         }
         
-        mag_out++;
-        if(mag_frequency!=0 && mag_out >= (100/mag_frequency)){
-            mag_out = 0;
+        count_magPrint++;
+        // print magnetometer data at mag_frequency
+        // every 100/mag_frequency ticks of the algorithm
+        if(mag_frequency!=0 && count_magPrint >= (100/mag_frequency)){
+            count_magPrint = 0;
             printMagData();        
         }
         
         count_yaw++;
+        // print yaw angle at 5Hz
+        // every 20 ticks of the algorithm (20*10ms = 200ms)
         if(count_yaw == 20){
             count_yaw = 0;
             printYawAngle();
@@ -357,14 +380,16 @@ int main(void) {
         ret = tmr_wait_period(TIMER1);
         if(ret) missed_deadlines++;
         
+        // OPTIONAL: print missed deadlines of algorithm
         count_dead++;
+        // every 500 ticks of the algorithm (500*10ms = 5s)
         if(count_dead==500){
             count_dead=0;
-            sprintf(buffer, "$MissedDeadlines%d*", missed_deadlines);
+            sprintf(buffer, "$MISS%d*", missed_deadlines);
 
             int l = strlen(buffer);
             for (int i = 0; i < l; i++) {
-                UART1_WriteChar(buffer[i]);
+                UART1_WriteChar(buffer[i], &cb_tx);
             }
         }
     }

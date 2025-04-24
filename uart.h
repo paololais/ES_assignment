@@ -36,21 +36,20 @@
 #define BAUDRATE 9600UL
 #define FCY 72000000UL  
 #define BRGVAL ((FCY / (16 * BAUDRATE)) - 1)
-#define BUFFER_SIZE 32 // da calcolare in base a quanti dati ricevo/trasmetto
+#define BUFFER_SIZE 32 // calculated based on the baudrate and the time it takes to send a character
 
 void UART1_Init();
-// Scrive un carattere sulla UART1
-void UART1_WriteChar(char c);
 
-// Legge un carattere dalla UART1
+void UART1_WriteChar(char c, CircularBuffer* cb_tx);
+
 char UART1_ReadChar(void);
 
-//buffer
+// circular buffer
 typedef struct {
-    char buffer[BUFFER_SIZE]; // Array che contiene i dati
-    int head; // Indice di scrittura
-    int tail; // Indice di lettura
-    int count; // Numero di elementi nel buffer
+    char buffer[BUFFER_SIZE];
+    int head; // write index
+    int tail; // read index
+    int count; // number of elements in the buffer
 } CircularBuffer;
 
 void cb_init(CircularBuffer *cb);

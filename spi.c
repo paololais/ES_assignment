@@ -9,15 +9,14 @@
 #include "spi.h"
 
 void spi_init() {
-    SPI1STATbits.SPIEN = 0;    // Disabilita SPI per configurazione
+    SPI1STATbits.SPIEN = 0;    // Disable SPI to configure it
 
     SPI1CON1bits.MSTEN = 1;    // Master mode
     SPI1CON1bits.MODE16 = 0;   // 8-bit mode
-    SPI1CON1bits.CKE = 1;      // Trasmissione su transizione attivo?idle
+    SPI1CON1bits.CKE = 1;      // Data changes on transition from idle to active clock state
     SPI1STATbits.SPIROV = 0;   // Clear overflow
 
-    // Fcy = 72MHz ? F_SPI = Fcy / (Primary � Secondary)
-    //TODO: calcolare quali valori settare
+    // Fcy = 72MHz, F_SPI = Fcy / (Primary * Secondary)
     SPI1CON1bits.PPRE = 0b00;  // Primary prescaler 64:1
     SPI1CON1bits.SPRE = 0b101; // Secondary prescaler 3:1
     
@@ -26,7 +25,7 @@ void spi_init() {
     TRISFbits.TRISF12 = 0; // RF12-RP108 SCK
     TRISFbits.TRISF13 = 0; // RF13-RP109 MOSI
     
-    // configurare i 3 slave come output
+    // configure CS pins
     TRISBbits.TRISB3 = 0;
     TRISBbits.TRISB4 = 0;
     TRISDbits.TRISD6 = 0;
@@ -39,7 +38,7 @@ void spi_init() {
     GYR_CS = 1;
     MAG_CS = 1;
 
-    SPI1STATbits.SPIEN = 1;    // Abilita SPI
+    SPI1STATbits.SPIEN = 1;    // enable SPI
 }
 
 unsigned int spi_write(unsigned int read_addr){
@@ -123,7 +122,7 @@ void mag_enable(){
     trash = SPI1BUF;
     while (SPI1STATbits.SPITBF == 1);
     SPI1BUF = 0b00110000; //25hz
-    //SPI1BUF = 0x00;
+    //SPI1BUF = 0x00; // default 10Hz
     while (SPI1STATbits.SPIRBF == 0);
     trash = SPI1BUF;
     MAG_CS = 1;
