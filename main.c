@@ -12,6 +12,7 @@
 #include <string.h>
 #include "stdio.h"
 #include <stdlib.h>
+#include <math.h>
 
 #define NUM_SAMPLES 5
 #define AXIS_X 0
@@ -51,6 +52,10 @@ int samples_collected_y = 0;              // Counter for total samples collected
 int z_axis_values[NUM_SAMPLES] = {0}; // Array to store last 5 measurement
 int current_index_z = 0;                  // Index to track the oldest measurement
 int samples_collected_z = 0;              // Counter for total samples collected
+
+double x_avg;
+double y_avg;
+double z_avg;
 
 // Interrupt UART RX
 void __attribute__((__interrupt__, __auto_psv__)) _U1RXInterrupt() {
@@ -260,11 +265,26 @@ float averageMeasurements(int axis) {
 }
 
 void printMagData(){    
-    double Xaverage = averageMeasurements(AXIS_X);
-    double Yaverage = averageMeasurements(AXIS_Y);
-    double Zaverage = averageMeasurements(AXIS_Z);
+    x_avg = averageMeasurements(AXIS_X);
+    y_avg = averageMeasurements(AXIS_Y);
+    z_avg = averageMeasurements(AXIS_Z);
     
-    sprintf(buffer, "$MAG,%.1f,%.1f,%.1f*", Xaverage,Yaverage,Zaverage);
+    sprintf(buffer, "$MAG,%.1f,%.1f,%.1f*", x_avg,y_avg,z_avg);
+
+    int l = strlen(buffer);
+    for (int i = 0; i < l; i++) {
+        UART1_WriteChar(buffer[i]);
+    }
+}
+
+void printYawAngle(){
+    double heading_rad = atan2(y_avg, x_avg);
+    double heading_deg = heading_rad * (180.0 / M_PI); // Convert to degrees
+
+    if (heading_deg < 0)
+        heading_deg += 360.0; // Normalize to 0?360°
+    
+    sprintf(buffer, " $YAW,%.1f*", heading_deg);
 
     int l = strlen(buffer);
     for (int i = 0; i < l; i++) {
@@ -286,6 +306,7 @@ int main(void) {
     int missed_deadlines = 0; // variable to count missed deadlines of algorithm
     int mag_out = 0; // feedback magnetometer data
     int count_getMagData = 0; // counter to sincronize getMagData at 25Hz
+    int count_yaw = 0; // counter to sincronize print yaw angle at 5Hz
     
     // led2
     TRISGbits.TRISG9 = 0; // LED2 output
@@ -325,6 +346,12 @@ int main(void) {
         if(mag_frequency!=0 && mag_out >= (100/mag_frequency)){
             mag_out = 0;
             printMagData();        
+        }
+        
+        count_yaw++;
+        if(count_yaw == 20){
+            count_yaw = 0;
+            printYawAngle();
         }
 
         ret = tmr_wait_period(TIMER1);
