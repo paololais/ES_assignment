@@ -198,9 +198,9 @@ section                    address   length (PC units)   length (bytes) (dec)
 .text                        0x200              0x274c          0x3af2  (15090)
 .const                      0x294c                0x4e            0x75  (117)
 .text                       0x299a               0xc50          0x1278  (4728)
-.dinit                      0x35ea                0x6e            0xa5  (165)
+.dinit                      0x35ea                0x68            0x9c  (156)
 
-                 Total "program" memory used (bytes):         0x4e84  (20100) 3%
+                 Total "program" memory used (bytes):         0x4e7b  (20091) 3%
 
 
 Auxflash Memory  [Origin = 0x7fc000, Length = 0x3ffa]
@@ -215,10 +215,9 @@ section                    address   length (PC units)   length (bytes) (dec)
 
 section                    address      alignment gaps    total length  (dec)
 -------                    -------      --------------    -------------------
-.nbss                       0x1000                   0            0x24  (36)
-.ndata                      0x1024                   0             0x8  (8)
-.nbss                       0x102c                   0             0x2  (2)
-.bss                        0x102e                   0            0x8c  (140)
+.nbss                       0x1000                   0            0xb0  (176)
+.ndata                      0x10b0                   0             0x8  (8)
+.nbss                       0x10b8                   0             0x2  (2)
 .data                       0x10ba                   0            0x4e  (78)
 .bss                        0x1108                   0             0x2  (2)
 
@@ -234,68 +233,66 @@ stack                       0x110a                              0x6ef6  (28406)
 
                  Maximum dynamic memory (bytes):         0x6ef6  (28406)
 
-Info: Project is using a large data memory model when small data memory model is sufficient.
-
 
 External Symbols in Data Memory (by address):
 
-                    0x1000                  _success
-                    0x1002                  _uartState
-                    0x1004                  _lsb
-                    0x1006                  _msb
-                    0x1008                  _raw
-                    0x100a                  _signed_value
-                    0x100c                  _current_index_x
-                    0x100e                  _samples_collected_x
-                    0x1010                  _current_index_y
-                    0x1012                  _samples_collected_y
-                    0x1014                  _current_index_z
-                    0x1016                  _samples_collected_z
-                    0x1018                  _x_avg
-                    0x101c                  _y_avg
-                    0x1020                  _z_avg
-                    0x1024                  _read_addr_x
-                    0x1026                  _read_addr_y
-                    0x1028                  _read_addr_z
-                    0x102a                  _mag_frequency
-                    0x102e                  _receivedXX
-                    0x1030                  _cb_tx
-                    0x1056                  _cb_rx
-                    0x107c                  _buffer
-                    0x109c                  _x_axis_values
-                    0x10a6                  _y_axis_values
-                    0x10b0                  _z_axis_values
+                    0x1000                  _receivedXX
+                    0x1002                  _success
+                    0x1004                  _uartState
+                    0x1006                  _cb_tx
+                    0x102c                  _cb_rx
+                    0x1052                  _buffer
+                    0x1072                  _lsb
+                    0x1074                  _msb
+                    0x1076                  _raw
+                    0x1078                  _signed_value
+                    0x107a                  _x_axis_values
+                    0x1084                  _current_index_x
+                    0x1086                  _samples_collected_x
+                    0x1088                  _y_axis_values
+                    0x1092                  _current_index_y
+                    0x1094                  _samples_collected_y
+                    0x1096                  _z_axis_values
+                    0x10a0                  _current_index_z
+                    0x10a2                  _samples_collected_z
+                    0x10a4                  _x_avg
+                    0x10a8                  _y_avg
+                    0x10ac                  _z_avg
+                    0x10b0                  _read_addr_x
+                    0x10b2                  _read_addr_y
+                    0x10b4                  _read_addr_z
+                    0x10b6                  _mag_frequency
                     0x1108                  ___errno_val
 
 External Symbols in Data Memory (by name):
 
                     0x1108                  ___errno_val
-                    0x107c                  _buffer
-                    0x1056                  _cb_rx
-                    0x1030                  _cb_tx
-                    0x100c                  _current_index_x
-                    0x1010                  _current_index_y
-                    0x1014                  _current_index_z
-                    0x1004                  _lsb
-                    0x102a                  _mag_frequency
-                    0x1006                  _msb
-                    0x1008                  _raw
-                    0x1024                  _read_addr_x
-                    0x1026                  _read_addr_y
-                    0x1028                  _read_addr_z
-                    0x102e                  _receivedXX
-                    0x100e                  _samples_collected_x
-                    0x1012                  _samples_collected_y
-                    0x1016                  _samples_collected_z
-                    0x100a                  _signed_value
-                    0x1000                  _success
-                    0x1002                  _uartState
-                    0x1018                  _x_avg
-                    0x109c                  _x_axis_values
-                    0x101c                  _y_avg
-                    0x10a6                  _y_axis_values
-                    0x1020                  _z_avg
-                    0x10b0                  _z_axis_values
+                    0x1052                  _buffer
+                    0x102c                  _cb_rx
+                    0x1006                  _cb_tx
+                    0x1084                  _current_index_x
+                    0x1092                  _current_index_y
+                    0x10a0                  _current_index_z
+                    0x1072                  _lsb
+                    0x10b6                  _mag_frequency
+                    0x1074                  _msb
+                    0x1076                  _raw
+                    0x10b0                  _read_addr_x
+                    0x10b2                  _read_addr_y
+                    0x10b4                  _read_addr_z
+                    0x1000                  _receivedXX
+                    0x1086                  _samples_collected_x
+                    0x1094                  _samples_collected_y
+                    0x10a2                  _samples_collected_z
+                    0x1078                  _signed_value
+                    0x1002                  _success
+                    0x1004                  _uartState
+                    0x10a4                  _x_avg
+                    0x107a                  _x_axis_values
+                    0x10a8                  _y_avg
+                    0x1088                  _y_axis_values
+                    0x10ac                  _z_avg
+                    0x1096                  _z_axis_values
 
 External Symbols in Program Memory (by address):
 
@@ -3973,44 +3970,41 @@ __c30_signature
  __c30_signature
                   0x0009c2          0x6 c:/program files/microchip/xc16/v2.10/bin/bin/../../lib\libm-elf.a(floorl.EP_o)
 
-.nbss               0x1000         0x24
- .nbss              0x1000         0x24 build/default/production/main.o
-                    0x1000                  _success
-                    0x1002                  _uartState
-                    0x1004                  _lsb
-                    0x1006                  _msb
-                    0x1008                  _raw
-                    0x100a                  _signed_value
-                    0x100c                  _current_index_x
-                    0x100e                  _samples_collected_x
-                    0x1010                  _current_index_y
-                    0x1012                  _samples_collected_y
-                    0x1014                  _current_index_z
-                    0x1016                  _samples_collected_z
-                    0x1018                  _x_avg
-                    0x101c                  _y_avg
-                    0x1020                  _z_avg
+.nbss               0x1000         0xb0
+ .nbss              0x1000         0xb0 build/default/production/main.o
+                    0x1000                  _receivedXX
+                    0x1002                  _success
+                    0x1004                  _uartState
+                    0x1006                  _cb_tx
+                    0x102c                  _cb_rx
+                    0x1052                  _buffer
+                    0x1072                  _lsb
+                    0x1074                  _msb
+                    0x1076                  _raw
+                    0x1078                  _signed_value
+                    0x107a                  _x_axis_values
+                    0x1084                  _current_index_x
+                    0x1086                  _samples_collected_x
+                    0x1088                  _y_axis_values
+                    0x1092                  _current_index_y
+                    0x1094                  _samples_collected_y
+                    0x1096                  _z_axis_values
+                    0x10a0                  _current_index_z
+                    0x10a2                  _samples_collected_z
+                    0x10a4                  _x_avg
+                    0x10a8                  _y_avg
+                    0x10ac                  _z_avg
 
-.ndata              0x1024          0x8
- .ndata             0x1024          0x8 build/default/production/main.o
-                    0x1024                  _read_addr_x
-                    0x1026                  _read_addr_y
-                    0x1028                  _read_addr_z
-                    0x102a                  _mag_frequency
+.ndata              0x10b0          0x8
+ .ndata             0x10b0          0x8 build/default/production/main.o
+                    0x10b0                  _read_addr_x
+                    0x10b2                  _read_addr_y
+                    0x10b4                  _read_addr_z
+                    0x10b6                  _mag_frequency
 
-.nbss               0x102c          0x2
- .nbss              0x102c          0x2 c:/program files/microchip/xc16/v2.10/bin/bin/../../lib\libc99-pic30-elf.a(errno.EP_o)
-                    0x102c                  _errno
-
-.bss                0x102e         0x8c
- .bss               0x102e         0x8c build/default/production/main.o
-                    0x102e                  _receivedXX
-                    0x1030                  _cb_tx
-                    0x1056                  _cb_rx
-                    0x107c                  _buffer
-                    0x109c                  _x_axis_values
-                    0x10a6                  _y_axis_values
-                    0x10b0                  _z_axis_values
+.nbss               0x10b8          0x2
+ .nbss              0x10b8          0x2 c:/program files/microchip/xc16/v2.10/bin/bin/../../lib\libc99-pic30-elf.a(errno.EP_o)
+                    0x10b8                  _errno
 
 .data               0x10ba         0x4e
  .data              0x10ba         0x20 c:/program files/microchip/xc16/v2.10/bin/bin/../../lib\libm-elf.a(atanf.EP_o)
@@ -4064,5 +4058,5 @@ __c30_signature
                   0x003598                  _cb_pop
                   0x0035d6                  _cb_is_empty
 
-.dinit            0x0035ea         0x6e
- .dinit           0x0035ea         0x6e data_init
+.dinit            0x0035ea         0x68
+ .dinit           0x0035ea         0x68 data_init
