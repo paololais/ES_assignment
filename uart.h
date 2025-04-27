@@ -38,12 +38,6 @@
 #define BRGVAL ((FCY / (16 * BAUDRATE)) - 1)
 #define BUFFER_SIZE 32 // calculated based on the baudrate and the time it takes to send a character
 
-void UART1_Init();
-
-void UART1_WriteChar(char c, CircularBuffer* cb_tx);
-
-char UART1_ReadChar(void);
-
 // circular buffer
 typedef struct {
     char buffer[BUFFER_SIZE];
@@ -56,6 +50,12 @@ void cb_init(CircularBuffer *cb);
 void cb_push(CircularBuffer *cb, char value);
 void cb_pop(CircularBuffer *cb, char *value);
 int cb_is_empty(CircularBuffer *cb);
+
+void UART1_Init();
+
+void UART1_WriteChar(char c, CircularBuffer* cb_tx);
+
+char UART1_ReadChar(void);
 
 #ifdef	__cplusplus
 extern "C" {
