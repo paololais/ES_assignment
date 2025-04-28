@@ -162,7 +162,7 @@ void handle_UART_FSM(char receivedChar) {
             else {
                 sprintf(buffer, "$ERR,1*");
                 IEC0bits.U1TXIE = 0; // disable TX interrupt
-                for (int i = 0; i < l; i++) {
+                for (int i = 0; i < strlen(buffer); i++) {
                     //UART1_WriteChar(buffer[i]);
                     cb_push(&cb_tx, buffer[i]);
                 }
@@ -177,7 +177,7 @@ void handle_UART_FSM(char receivedChar) {
             if (receivedChar == '*'){
                 sprintf(buffer, "$OK - %d*", mag_frequency);
                 IEC0bits.U1TXIE = 0; // disable TX interrupt
-                for (int i = 0; i < l; i++) {
+                for (int i = 0; i < strlen(buffer); i++) {
                     //UART1_WriteChar(buffer[i]);
                     cb_push(&cb_tx, buffer[i]);
                 }
@@ -293,9 +293,8 @@ float averageMeasurements(int axis) {
 void printMagData(){    
     sprintf(buffer, "$MAG,%.1f,%.1f,%.1f*", x_avg,y_avg,z_avg);
 
-    int l = strlen(buffer);
     IEC0bits.U1TXIE = 0; // disable TX interrupt
-    for (int i = 0; i < l; i++) {
+    for (int i = 0; i < strlen(buffer); i++) {
         //UART1_WriteChar(buffer[i]);
         cb_push(&cb_tx, buffer[i]);
     }
@@ -312,9 +311,8 @@ void printYawAngle(){
     
     sprintf(buffer, " $YAW,%.1f*", heading_deg);
 
-    int l = strlen(buffer);
     IEC0bits.U1TXIE = 0; // disable TX interrupt
-    for (int i = 0; i < l; i++) {
+    for (int i = 0; i < strlen(buffer); i++) {
         //UART1_WriteChar(buffer[i]);
         cb_push(&cb_tx, buffer[i]);
     }
@@ -402,9 +400,8 @@ int main(void) {
             count_dead=0;
             sprintf(buffer, "$MISS%d*", missed_deadlines);
 
-            int l = strlen(buffer);
             IEC0bits.U1TXIE = 0; // disable TX interrupt
-            for (int i = 0; i < l; i++) {
+            for (int i = 0; i < strlen(buffer); i++) {
                 //UART1_WriteChar(buffer[i]);
                 cb_push(&cb_tx, buffer[i]);
             }
