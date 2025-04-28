@@ -78,6 +78,7 @@ void __attribute__((__interrupt__, __auto_psv__)) _U1TXInterrupt() {
             cb_pop(&cb_tx, &c); // Pop a character from the TX buffer
             U1TXREG = c;        // Write the character to the UART TX register
         } else {
+            IFS0bits.U1TXIE = 0;
             break;
         }
     }
@@ -161,10 +162,11 @@ void handle_UART_FSM(char receivedChar) {
             if(success) uartState = S_asterisk;
             else {
                 sprintf(buffer, "$ERR,1*");
+                IFS0bits.U1TXIE = 0;
                 for (int i = 0; i < strlen(buffer); i++) {
                     cb_push(&cb_tx, buffer[i]);
                 }
-                IFS0bits.U1TXIF = 1;
+                IFS0bits.U1TXIE = 1;
                 memset(buffer, 0, sizeof(buffer));
             
                 uartState = IDLE;
@@ -174,10 +176,11 @@ void handle_UART_FSM(char receivedChar) {
         case S_asterisk:
             if (receivedChar == '*'){
                 sprintf(buffer, "$OK - %d*", mag_frequency);
+                IFS0bits.U1TXIE = 0;
                 for (int i = 0; i < strlen(buffer); i++) {
                     cb_push(&cb_tx, buffer[i]);
                 }
-                IFS0bits.U1TXIF = 1;
+                IFS0bits.U1TXIE = 1;
                 memset(buffer, 0, sizeof(buffer));                
             }
             
@@ -289,10 +292,11 @@ float averageMeasurements(int axis) {
 void printMagData(){    
     sprintf(buffer, "$MAG,%.1f,%.1f,%.1f*", x_avg,y_avg,z_avg);
 
+    IFS0bits.U1TXIE = 0;
     for (int i = 0; i < strlen(buffer); i++) {
         cb_push(&cb_tx, buffer[i]);
     }
-    IFS0bits.U1TXIF = 1;
+    IFS0bits.U1TXIE = 1;
 }
 
 // Function to print yaw angle using protocol $YAW,xx*
@@ -305,10 +309,11 @@ void printYawAngle(){
     
     sprintf(buffer, " $YAW,%.1f*", heading_deg);
 
+    IFS0bits.U1TXIE = 0;
     for (int i = 0; i < strlen(buffer); i++) {
         cb_push(&cb_tx, buffer[i]);
     }
-    IFS0bits.U1TXIF = 1;
+    IFS0bits.U1TXIE = 1;
 }
 
 // periodic function that runs for 7ms
@@ -391,11 +396,12 @@ int main(void) {
         if(count_dead==500){
             count_dead=0;
             sprintf(buffer, "$MISS%d*", missed_deadlines);
-
+            
+            IFS0bits.U1TXIE = 0;
             for (int i = 0; i < strlen(buffer); i++) {
                 cb_push(&cb_tx, buffer[i]);
             }
-            IFS0bits.U1TXIF = 1;
+            IFS0bits.U1TXIE = 1;
         }
     }
     return 0;
