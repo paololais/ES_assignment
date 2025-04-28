@@ -53,7 +53,7 @@ int cb_is_empty(CircularBuffer *cb);
 
 void UART1_Init();
 
-void UART1_WriteChar(char c, CircularBuffer* cb_tx);
+void UART1_WriteChar(char c);
 
 char UART1_ReadChar(void);
 
