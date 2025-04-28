@@ -161,12 +161,12 @@ void handle_UART_FSM(char receivedChar) {
             if(success) uartState = S_asterisk;
             else {
                 sprintf(buffer, "$ERR,1*");
-                IEC0bits.U1TXIE = 0; // disable TX interrupt
                 for (int i = 0; i < strlen(buffer); i++) {
                     //UART1_WriteChar(buffer[i]);
+                    IEC0bits.U1TXIE = 0; // disable TX interrupt
                     cb_push(&cb_tx, buffer[i]);
+                    IEC0bits.U1TXIE = 1; // Enable TX interrupt
                 }
-                IEC0bits.U1TXIE = 1; // Enable TX interrupt
                 memset(buffer, 0, sizeof(buffer));
             
                 uartState = IDLE;
@@ -176,12 +176,12 @@ void handle_UART_FSM(char receivedChar) {
         case S_asterisk:
             if (receivedChar == '*'){
                 sprintf(buffer, "$OK - %d*", mag_frequency);
-                IEC0bits.U1TXIE = 0; // disable TX interrupt
                 for (int i = 0; i < strlen(buffer); i++) {
+                    IEC0bits.U1TXIE = 0; // disable TX interrupt
                     //UART1_WriteChar(buffer[i]);
                     cb_push(&cb_tx, buffer[i]);
+                    IEC0bits.U1TXIE = 1; // Enable TX interrupt
                 }
-                IEC0bits.U1TXIE = 1; // Enable TX interrupt
                 memset(buffer, 0, sizeof(buffer));                
             }
             
@@ -293,12 +293,12 @@ float averageMeasurements(int axis) {
 void printMagData(){    
     sprintf(buffer, "$MAG,%.1f,%.1f,%.1f*", x_avg,y_avg,z_avg);
 
-    IEC0bits.U1TXIE = 0; // disable TX interrupt
     for (int i = 0; i < strlen(buffer); i++) {
         //UART1_WriteChar(buffer[i]);
+        IEC0bits.U1TXIE = 0; // disable TX interrupt
         cb_push(&cb_tx, buffer[i]);
+        IEC0bits.U1TXIE = 1; // Enable TX interrupt
     }
-    IEC0bits.U1TXIE = 1; // Enable TX interrupt
 }
 
 // Function to print yaw angle using protocol $YAW,xx*
@@ -311,12 +311,12 @@ void printYawAngle(){
     
     sprintf(buffer, " $YAW,%.1f*", heading_deg);
 
-    IEC0bits.U1TXIE = 0; // disable TX interrupt
     for (int i = 0; i < strlen(buffer); i++) {
+        IEC0bits.U1TXIE = 0; // disable TX interrupt
         //UART1_WriteChar(buffer[i]);
         cb_push(&cb_tx, buffer[i]);
+        IEC0bits.U1TXIE = 1; // Enable TX interrupt
     }
-    IEC0bits.U1TXIE = 1; // Enable TX interrupt
 }
 
 // periodic function that runs for 7ms
@@ -400,12 +400,12 @@ int main(void) {
             count_dead=0;
             sprintf(buffer, "$MISS%d*", missed_deadlines);
 
-            IEC0bits.U1TXIE = 0; // disable TX interrupt
             for (int i = 0; i < strlen(buffer); i++) {
                 //UART1_WriteChar(buffer[i]);
+                IEC0bits.U1TXIE = 0; // disable TX interrupt
                 cb_push(&cb_tx, buffer[i]);
+                IEC0bits.U1TXIE = 1; // Enable TX interrupt
             }
-            IEC0bits.U1TXIE = 1; // Enable TX interrupt
         }
     }
     return 0;
