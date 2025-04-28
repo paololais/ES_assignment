@@ -51,13 +51,13 @@ void cb_init(CircularBuffer *cb) {
 }
 
 void cb_push(CircularBuffer *cb, char value) {
-    
+    if (cb->count == BUFFER_SIZE){
+         // Buffer full: overwrite oldest
+        cb->tail = (cb->tail + 1) % BUFFER_SIZE;
+        cb->count--;
+    }
     cb->buffer[cb->head] = value; // write the value
     cb->head = (cb->head + 1) % BUFFER_SIZE; // increment circularly
-    if (cb->count == BUFFER_SIZE){
-        cb->tail = (cb->tail + 1) % BUFFER_SIZE;
-        return; // buffer is full, overwrite the oldest value, don't increment count
-    }
     cb->count++;
 }
 
