@@ -65,22 +65,24 @@ void __attribute__((__interrupt__, __auto_psv__)) _U1RXInterrupt() {
     cb_push(&cb_rx, receivedChar);
     IFS0bits.U1RXIF = 0; // Reset flag interrupt
 }
-/*
+
 // Interrupt UART TX
 void __attribute__((__interrupt__, __auto_psv__)) _U1TXInterrupt() {
     char c;
-
-    // If there are characters in the TX buffer, send them
-    if (!cb_is_empty(&cb_tx)) {
-        cb_pop(&cb_tx, &c); // Pop a character from the TX buffer
-        U1TXREG = c;        // Write the character to the UART TX register
-    } else {
-        IEC0bits.U1TXIE = 0; // Disable TX interrupt if the buffer is empty
+    
+    while(U1STAbits.UTXBF == 0){
+        // If there are characters in the TX buffer, send them
+        if (!cb_is_empty(&cb_tx)) {
+            cb_pop(&cb_tx, &c); // Pop a character from the TX buffer
+            U1TXREG = c;        // Write the character to the UART TX register
+        } else {
+            break;
+        }
     }
 
     IFS0bits.U1TXIF = 0; // Clear the TX interrupt flag
 }
-*/
+
 // Reads the frequency value specified by the user.
 // performs a check to see if the value is valid.
 // Returns 1 if the value is valid, 0 otherwise.
@@ -160,7 +162,8 @@ void handle_UART_FSM(char receivedChar) {
             else {
                 sprintf(buffer, "$ERR,1*");
                 for (int i = 0; i < strlen(buffer); i++){
-                    UART1_WriteChar(buffer[i]);
+                    //UART1_WriteChar(buffer[i]);
+                    cb_push(&cb_tx, buffer[i]);
                 }
                 memset(buffer, 0, sizeof(buffer));
             
@@ -172,8 +175,10 @@ void handle_UART_FSM(char receivedChar) {
             if (receivedChar == '*'){
                 sprintf(buffer, "$OK - %d*", mag_frequency);
                 for (int i = 0; i < strlen(buffer); i++){
-                    UART1_WriteChar(buffer[i]);
+                    //UART1_WriteChar(buffer[i]);
+                    cb_push(&cb_tx, buffer[i]);  // Push the character into the TX buffer
                 }
+                //IEC0bits.U1TXIE = 1; // Enable TX interrupt
                 memset(buffer, 0, sizeof(buffer));                
             }
             
@@ -287,7 +292,8 @@ void printMagData(){
 
     int l = strlen(buffer);
     for (int i = 0; i < l; i++) {
-        UART1_WriteChar(buffer[i]);
+        //UART1_WriteChar(buffer[i]);
+        cb_push(&cb_tx, buffer[i]);
     }
 }
 
@@ -303,7 +309,8 @@ void printYawAngle(){
 
     int l = strlen(buffer);
     for (int i = 0; i < l; i++) {
-        UART1_WriteChar(buffer[i]);
+        //UART1_WriteChar(buffer[i]);
+        cb_push(&cb_tx, buffer[i]);
     }
 }
 
@@ -390,7 +397,8 @@ int main(void) {
 
             int l = strlen(buffer);
             for (int i = 0; i < l; i++) {
-                UART1_WriteChar(buffer[i]);
+                //UART1_WriteChar(buffer[i]);
+                cb_push(&cb_tx, buffer[i]);
             }
         }
     }
