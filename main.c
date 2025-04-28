@@ -22,7 +22,7 @@
 
 // Finite State Machine (FSM) states for UART communication
 typedef enum {IDLE, S_dollar, S_R, S_A, S_T, S_E, S_comma, S_asterisk} UART_State;
-char receivedXX[2]; // store values for $RATE,xx*
+char receivedXX[3]; // store values for $RATE,xx*
 int success = 0; // flag to check if the value is valid
 UART_State uartState = IDLE; // Initialize the UART state to IDLE
 
@@ -95,6 +95,7 @@ int readFrequency(){
     cb_pop(&cb_rx, &receivedXX[1]);
     IEC0bits.U1RXIE = 1;   // enable interrupt RX
     
+    receivedXX[2]='\0';
     if(strcmp(receivedXX, "00") == 0 || strcmp(receivedXX, "01") == 0 || strcmp(receivedXX, "02") == 0 || 
             strcmp(receivedXX, "04") == 0 || strcmp(receivedXX, "05") == 0 || strcmp(receivedXX, "10") == 0){
         
