@@ -23,9 +23,8 @@ void UART1_Init(void) {
     
     U1MODEbits.UARTEN = 1; // enbale UART1
     U1STAbits.UTXEN = 1; // enable TX
-    U1STAbits.URXDA = 1; // enab RX
     IEC0bits.U1RXIE = 1;   // enable RX interrupt
-    IEC0bits.U1TXIE = 1; // Enable TX interrupt
+    //IEC0bits.U1TXIE = 1; // Enable TX interrupt
 }
 
 // writes a character to the UART1 using a circular buffer
