@@ -24,23 +24,6 @@ void UART1_Init(void) {
     U1MODEbits.UARTEN = 1; // enbale UART1
     U1STAbits.UTXEN = 1; // enable TX
     IEC0bits.U1RXIE = 1;   // enable RX interrupt
-    //IEC0bits.U1TXIE = 1; // Enable TX interrupt
-}
-
-// writes a character to the UART1 using a circular buffer
-// This function pushes the character into the circular buffer and enables the TX interrupt
-void UART1_WriteChar(char c) {
-    while (U1STAbits.UTXBF); // wait Tx buffer to be empty
-    U1TXREG = c; // send character
-    
-    //IEC0bits.U1TXIE = 0; // Disable TX interrupt
-    //cb_push(cb_tx, c);  // Push the character into the TX buffer
-    //IEC0bits.U1TXIE = 1; // Enable TX interrupt
-}
-
-// reads a character from the UART1
-char UART1_ReadChar(void) {
-    return U1RXREG;
 }
 
 //circular buffer

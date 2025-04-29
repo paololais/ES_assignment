@@ -53,10 +53,6 @@ int cb_is_empty(CircularBuffer *cb);
 
 void UART1_Init();
 
-void UART1_WriteChar(char c);
-
-char UART1_ReadChar(void);
-
 #ifdef	__cplusplus
 extern "C" {
 #endif /* __cplusplus */

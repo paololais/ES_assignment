@@ -202,16 +202,12 @@ void addMeasurement(int axis, int new_value) {
             break;
         case AXIS_Y:
             y_axis_values[current_index_y++] = new_value;
-            // Update index to point to the next position (which will be the oldest value)
             current_index_y = (current_index_y + 1) % NUM_SAMPLES;
-            // Keep track of how many samples we've collected
             if (samples_collected_y < NUM_SAMPLES) samples_collected_y++;
             break;
         case AXIS_Z:
             z_axis_values[current_index_z++] = new_value;
-            // Update index to point to the next position (which will be the oldest value)
             current_index_z = (current_index_z + 1) % NUM_SAMPLES;
-            // Keep track of how many samples we've collected
             if (samples_collected_z < NUM_SAMPLES) samples_collected_z++;
             break;
     }

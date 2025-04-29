@@ -107,6 +107,8 @@ void tmr_wait_ms(int timer, int ms){
     long int Fcy = 72000000;
     // Formula: PRx = (Fcy / Prescaler) * (ms / 1000)
     //PR1 = 56250;
+    if(ms > 200) return;
+    
     if(timer == 1){
         PR1 = (int) ((Fcy / 256) * (ms / 1000.0));
     
@@ -118,9 +120,6 @@ void tmr_wait_ms(int timer, int ms){
     }
     
     else if(timer == 2){
-        //if(ms > 200) T2CONbits.T32 = 1;
-        if(ms > 200) return;
-
         PR2 = (int) ((Fcy / 256) * (ms / 1000.0));
 
         T2CONbits.TCS = 0;
