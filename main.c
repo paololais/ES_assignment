@@ -106,7 +106,7 @@ int readFrequency(){
 
 // Handles the UART Finite State Machine (FSM) based on the received character.
 // This function processes the input character received via UART and updates the state of the FSM accordingly.
-// recognizes a specific command format: $RATE,xx*.
+// recognizes a specific command format: $RATE,xx*
 void handle_UART_FSM(char receivedChar) {
     switch (uartState) {
         case IDLE:
@@ -154,8 +154,9 @@ void handle_UART_FSM(char receivedChar) {
             break;
         case S_asterisk:
             if (receivedChar == '*'){
-                mag_frequency = atoi(receivedXX);
-                
+                mag_frequency = atoi(receivedXX);                
+                /*
+                //Use to debug
                 sprintf(buffer, "$OK - %d*", mag_frequency);
                 IEC0bits.U1TXIE = 0;
                 for (int i = 0; i < strlen(buffer); i++) {
@@ -163,15 +164,7 @@ void handle_UART_FSM(char receivedChar) {
                 }
                 IEC0bits.U1TXIE = 1;
                 memset(buffer, 0, sizeof(buffer));                
-
-            } else {
-                sprintf(buffer, "$NOs*");
-                IEC0bits.U1TXIE = 0;
-                for (int i = 0; i < strlen(buffer); i++) {
-                    cb_push(&cb_tx, buffer[i]);
-                }
-                IEC0bits.U1TXIE = 1;
-                memset(buffer, 0, sizeof(buffer));     
+                */
             }
             
             uartState = IDLE;
@@ -317,11 +310,13 @@ int main(void) {
     //variables
     int ret;    // variable to check if the algorithm has missed a deadline
     int i = 0; // variable to count 50 ticks (500ms)
-    int missed_deadlines = 0; // variable to count missed deadlines of algorithm
-    int count_magPrint = 0; // feedback magnetometer data
+    int count_magPrint = 0; // counter to sincronize printMagData at the specified rate
     int count_getMagData = 0; // counter to sincronize getMagData at 25Hz
     int count_yaw = 0; // counter to sincronize print yaw angle at 5Hz
-    int count_dead = 0; // counter to sincronize print missed deadlines
+    
+    // optional: print missed deadlines
+    //int missed_deadlines = 0; // variable to count missed deadlines of algorithm
+    //int count_dead = 0; // counter to sincronize print missed deadlines
     
     TRISGbits.TRISG9 = 0; // LED2 output
     LATGbits.LATG9 = 0; // switch off LED2 at the beginning
@@ -378,9 +373,10 @@ int main(void) {
         }
 
         ret = tmr_wait_period(TIMER1);
-        if(ret) missed_deadlines++;
         
         // OPTIONAL: print missed deadlines of algorithm
+        /*
+        if(ret) missed_deadlines++;
         count_dead++;
         // every 500 ticks of the algorithm (500*10ms = 5s)
         if(count_dead==500){
@@ -393,6 +389,7 @@ int main(void) {
             }
             IEC0bits.U1TXIE = 1;
         }
+        */
     }
     return 0;
 }
