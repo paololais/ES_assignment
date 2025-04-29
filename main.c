@@ -34,7 +34,7 @@ CircularBuffer cb_tx;
 // used to receive rate by user
 CircularBuffer cb_rx;
 
-char buffer[32];    // buffer for UART messages
+char buffer[32];    // buffer to store strings
 unsigned int read_addr_x = 0x42; // address of X axis
 unsigned int read_addr_y = 0x44; // address of Y axis
 unsigned int read_addr_z = 0x46; // address of Z axis
@@ -97,33 +97,11 @@ int readFrequency(){
     
     receivedXX[2]='\0';
     if(strcmp(receivedXX, "00") == 0 || strcmp(receivedXX, "01") == 0 || strcmp(receivedXX, "02") == 0 || 
-            strcmp(receivedXX, "04") == 0 || strcmp(receivedXX, "05") == 0 || strcmp(receivedXX, "10") == 0){
-        
-        mag_frequency = atoi(receivedXX);
+            strcmp(receivedXX, "04") == 0 || strcmp(receivedXX, "05") == 0 || strcmp(receivedXX, "10") == 0){        
         return 1;
     }
     
     else return 0;
-
-    /*
-    receivedXX[2] = '\0'; // Null-terminate the string
-
-    // Convert the string to an integer
-    int frequency = atoi(receivedXX);
-
-    // Check if the frequency is one of the valid values
-    switch (frequency) {
-        case 0:
-        case 1:
-        case 2:
-        case 4:
-        case 5:
-        case 10:
-            return 1; // Valid 
-        default:
-            return 0; // Invalid, flag error
-    }
-    */
 }
 
 // Handles the UART Finite State Machine (FSM) based on the received character.
@@ -176,6 +154,8 @@ void handle_UART_FSM(char receivedChar) {
             break;
         case S_asterisk:
             if (receivedChar == '*'){
+                mag_frequency = atoi(receivedXX);
+                
                 sprintf(buffer, "$OK - %d*", mag_frequency);
                 IEC0bits.U1TXIE = 0;
                 for (int i = 0; i < strlen(buffer); i++) {
@@ -183,6 +163,15 @@ void handle_UART_FSM(char receivedChar) {
                 }
                 IEC0bits.U1TXIE = 1;
                 memset(buffer, 0, sizeof(buffer));                
+
+            } else {
+                sprintf(buffer, "$NOs*");
+                IEC0bits.U1TXIE = 0;
+                for (int i = 0; i < strlen(buffer); i++) {
+                    cb_push(&cb_tx, buffer[i]);
+                }
+                IEC0bits.U1TXIE = 1;
+                memset(buffer, 0, sizeof(buffer));     
             }
             
             uartState = IDLE;
