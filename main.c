@@ -1,6 +1,6 @@
 /*
  * File:   main.c
- * Author: paolo
+ * Author: group 6
  *
  * Created on April 18, 2025, 10:57 AM
  */
